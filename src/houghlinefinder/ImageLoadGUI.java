@@ -161,9 +161,12 @@ public class ImageLoadGUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         String fileName = fileTextField.getText();
         BufferedImage originalImg = ImageProcessor.getImage(fileName);
-        BufferedImage greyscaleImg = ImageProcessor.greyScale(originalImg);
-        greyScaleImgDisplayLabel.setIcon(new ImageIcon(greyscaleImg));
-        
+        originalImgDisplayLabel.setIcon(new ImageIcon(originalImg));
+        BufferedImage greyScaleImg = ImageProcessor.greyScale(originalImg);
+        greyScaleImgDisplayLabel.setIcon(new ImageIcon(greyScaleImg));
+        BufferedImage filteredImg = ImageProcessor.filterGreyScaleImg(greyScaleImg, minBrightSlider.getValue(), maxBrightSlider.getValue());
+        BufferedImage houghImg = ImageProcessor.getHoughTransformImage(filteredImg);
+        houghTransformImgLabel.setIcon(new ImageIcon(houghImg));
     }//GEN-LAST:event_loadImageButtonActionPerformed
 
     /**

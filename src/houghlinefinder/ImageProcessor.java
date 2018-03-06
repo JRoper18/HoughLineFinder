@@ -9,6 +9,9 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import javafx.util.Pair;
 import javax.imageio.ImageIO;
 
 /**
@@ -62,12 +65,44 @@ public class ImageProcessor {
     public static BufferedImage getHoughTransformImage(BufferedImage filteredImg){
         int width = filteredImg.getWidth();
         int height = filteredImg.getHeight();
-        BufferedImage houghImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        Map<Pair<Integer, Integer>, Integer> houghPlane = new HashMap<>();
+        int minDistance = 0;
+        int maxDistance = 0;
+        int maxBrightness = 0;
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                
+                int currentRGB = filteredImg.getRGB(j, i);
+                if(currentRGB != 0){
+                    for(int theta = 1; theta < 180; theta++){
+                        double thetaRad = theta * Math.PI /180;
+                        int distance = (int) ((j*Math.cos(thetaRad)) + (i*Math.sin(thetaRad)));
+                        if(distance < minDistance){
+                            minDistance = distance;
+                        }
+                        if(distance > maxDistance){
+                            maxDistance = distance;
+                        }
+                        Pair<Integer, Integer> point = new Pair(theta, distance);
+                        int currentBrightness = 1;
+                        if(houghPlane.containsKey(point)){
+                            currentBrightness = houghPlane.get(point)+1;
+                        }
+                        if(currentBrightness > maxBrightness){
+                            maxBrightness = currentBrightness;
+                        }
+                        houghPlane.put(point, currentBrightness);
+                    }
+                }
             }
         }
+        BufferedImage houghImg = new BufferedImage(180, maxDistance - minDistance + 1, BufferedImage.TYPE_BYTE_GRAY);
+        for(Pair<Integer, Integer> coord : houghPlane.keySet()){
+            int brightness = houghPlane.get(coord);
+            int relativeBrightness = brightness*225/maxBrightness;
+            int brightnessColor = new Color(relativeBrightness, relativeBrightness, relativeBrightness).getRGB();
+            houghImg.setRGB(coord.getKey(), coord.getValue() + Math.abs(minDistance), brightnessColor);
+        }
+        return houghImg;
     }
 }
 
