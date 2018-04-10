@@ -6,11 +6,16 @@
 package houghlinefinder;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javafx.util.Pair;
 import javax.imageio.ImageIO;
 
@@ -30,7 +35,7 @@ public class ImageProcessor {
     public static BufferedImage greyScale(BufferedImage coloredImg){
         int width = coloredImg.getWidth();
         int height = coloredImg.getHeight();
-        BufferedImage greyScaleImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        BufferedImage greyScaleImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);    
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                     Color c = new Color(coloredImg.getRGB(j, i));
@@ -44,65 +49,52 @@ public class ImageProcessor {
         }
         return greyScaleImg;
     }
-    public static BufferedImage filterGreyScaleImg(BufferedImage greyScaleImg, int minBrightness, int maxBrightness){
+    public static FilteredImageData filterGreyScaleImg(BufferedImage greyScaleImg, int minBrightness, int maxBrightness){
         int width = greyScaleImg.getWidth();
         int height = greyScaleImg.getHeight();
         BufferedImage filteredImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        boolean[][] isFilteredArray = new boolean[width][height];
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 int currentRGB = greyScaleImg.getRGB(j, i);
                 int currentBrightness = new Color(currentRGB).getRed(); //All colors are the same, just use red
                 if(currentBrightness > minBrightness && currentBrightness < maxBrightness){
                     filteredImg.setRGB(j, i, currentRGB);
+                    isFilteredArray[j][i] = true;
                 }
                 else{
                     filteredImg.setRGB(j, i, 0);
                 }
             }
         }
-        return filteredImg;
+        return new FilteredImageData(filteredImg, isFilteredArray);
     }
-    public static BufferedImage getHoughTransformImage(BufferedImage filteredImg){
-        int width = filteredImg.getWidth();
-        int height = filteredImg.getHeight();
-        Map<Pair<Integer, Integer>, Integer> houghPlane = new HashMap<>();
-        int minDistance = 0;
-        int maxDistance = 0;
-        int maxBrightness = 0;
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                int currentRGB = filteredImg.getRGB(j, i);
-                if(currentRGB != 0){
-                    for(int theta = 1; theta < 180; theta++){
-                        double thetaRad = theta * Math.PI /180;
-                        int distance = (int) ((j*Math.cos(thetaRad)) + (i*Math.sin(thetaRad)));
-                        if(distance < minDistance){
-                            minDistance = distance;
-                        }
-                        if(distance > maxDistance){
-                            maxDistance = distance;
-                        }
-                        Pair<Integer, Integer> point = new Pair(theta, distance);
-                        int currentBrightness = 1;
-                        if(houghPlane.containsKey(point)){
-                            currentBrightness = houghPlane.get(point)+1;
-                        }
-                        if(currentBrightness > maxBrightness){
-                            maxBrightness = currentBrightness;
-                        }
-                        houghPlane.put(point, currentBrightness);
-                    }
+    public static HoughImageData getHoughTransformData(FilteredImageData filteredData){
+        int width = filteredData.actualImg.getWidth();
+        int height = filteredData.actualImg.getHeight();
+        int maxDistance = 2 * (int) Math.ceil(Math.sqrt((width * width) + (height * height)));
+        HoughImageData houghData = new HoughImageData(maxDistance);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if(filteredData.isFiltered[x][y]){
+                    houghData.addPointToPlane(x, y);
                 }
             }
         }
-        BufferedImage houghImg = new BufferedImage(180, maxDistance - minDistance + 1, BufferedImage.TYPE_BYTE_GRAY);
-        for(Pair<Integer, Integer> coord : houghPlane.keySet()){
-            int brightness = houghPlane.get(coord);
-            int relativeBrightness = brightness*225/maxBrightness;
-            int brightnessColor = new Color(relativeBrightness, relativeBrightness, relativeBrightness).getRGB();
-            houghImg.setRGB(coord.getKey(), coord.getValue() + Math.abs(minDistance), brightnessColor);
+        return houghData;
+    }
+    public static BufferedImage getLineDrawnImage(HoughImageData houghData, BufferedImage originalImage){
+        //Copy the original image so we can draw on it. 
+        ColorModel colorModel = originalImage.getColorModel();
+        boolean isAlphaPremultiplied = colorModel.isAlphaPremultiplied();
+        WritableRaster raster = originalImage.copyData(null);
+        BufferedImage modifyableImage = new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
+        Graphics imgGraphics = modifyableImage.createGraphics();
+        for(GraphicsLineData lineData : houghData.getLines(10)){ //10 is completely arbitrary
+            imgGraphics.drawLine(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
         }
-        return houghImg;
+        return modifyableImage;
+        
     }
 }
 

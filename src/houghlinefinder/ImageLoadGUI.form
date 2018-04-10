@@ -118,8 +118,14 @@
   </Layout>
   <SubComponents>
     <Component class="javax.swing.JSlider" name="maxBrightSlider">
+      <Properties>
+        <Property name="maximum" type="int" value="255"/>
+      </Properties>
     </Component>
     <Component class="javax.swing.JSlider" name="minBrightSlider">
+      <Properties>
+        <Property name="maximum" type="int" value="255"/>
+      </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>

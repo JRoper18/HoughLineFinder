@@ -48,6 +48,10 @@ public class ImageLoadGUI extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        maxBrightSlider.setMaximum(255);
+
+        minBrightSlider.setMaximum(255);
+
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Min. Brightness");
 
@@ -162,11 +166,17 @@ public class ImageLoadGUI extends javax.swing.JFrame {
         String fileName = fileTextField.getText();
         BufferedImage originalImg = ImageProcessor.getImage(fileName);
         originalImgDisplayLabel.setIcon(new ImageIcon(originalImg));
+        System.out.println("Image loaded! Creating greyscale...");
         BufferedImage greyScaleImg = ImageProcessor.greyScale(originalImg);
+        System.out.println("Greyscale loaded! Filtering image...");
         greyScaleImgDisplayLabel.setIcon(new ImageIcon(greyScaleImg));
-        BufferedImage filteredImg = ImageProcessor.filterGreyScaleImg(greyScaleImg, minBrightSlider.getValue(), maxBrightSlider.getValue());
-        BufferedImage houghImg = ImageProcessor.getHoughTransformImage(filteredImg);
-        houghTransformImgLabel.setIcon(new ImageIcon(houghImg));
+        FilteredImageData filteredData = ImageProcessor.filterGreyScaleImg(greyScaleImg, minBrightSlider.getValue(), maxBrightSlider.getValue());;
+        System.out.println("Filtered image created! Creating Hough Transform...");
+        HoughImageData houghImgData = ImageProcessor.getHoughTransformData(filteredData);
+        houghTransformImgLabel.setIcon(new ImageIcon(houghImgData.toImage()));
+        System.out.println("Hough Transform created! Drawing lines over original image...");
+        
+        
     }//GEN-LAST:event_loadImageButtonActionPerformed
 
     /**
