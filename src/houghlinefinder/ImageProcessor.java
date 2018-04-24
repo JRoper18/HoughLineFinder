@@ -12,11 +12,6 @@ import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import javafx.util.Pair;
 import javax.imageio.ImageIO;
 
 /**
@@ -90,11 +85,11 @@ public class ImageProcessor {
         WritableRaster raster = originalImage.copyData(null);
         BufferedImage modifyableImage = new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
         Graphics imgGraphics = modifyableImage.createGraphics();
-        for(GraphicsLineData lineData : houghData.getLines(10)){ //10 is completely arbitrary
+        imgGraphics.setColor(Color.red);
+        for(GraphicsLineData lineData : houghData.getLines(5, originalImage.getWidth(), originalImage.getHeight())){ //10 is completely arbitrary
             imgGraphics.drawLine(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
         }
         return modifyableImage;
-        
     }
 }
 
