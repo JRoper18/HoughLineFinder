@@ -47,8 +47,7 @@ public class HoughImageData {
         for(int x = 0; x < 180; x++){
             for(int y = 0; y<maxDistance; y++){
                 int val = houghPlane[x][y];
-                if(Math.abs(val - maxBrightness) < threshold){ //This pixel is bright enough to represent a line. 
-                    
+                if(Math.abs(val - maxBrightness) < threshold){ //This pixel is bright enough to represent a line.
                     int thetaDeg = x - 89;
                     int distance = y - distanceOffset;
                     if(thetaDeg == 0){ //Vertical line
@@ -58,8 +57,11 @@ public class HoughImageData {
                     double x1, y1, x2, y2;
                     double thetaRad = thetaDeg * Math.PI/180;
                     double slope = -1 * (Math.cos(thetaRad) / Math.sin(thetaRad));
-                    double yIntercept = distance / Math.sin(thetaRad);  
+                    double yIntercept = distance / Math.sin(thetaRad); 
                     y1 = (int) yIntercept;
+                    if(y1 == height){
+                        continue;
+                    }
                     x1 = 0;
                     
                     //Now determine the ending points of these lines
